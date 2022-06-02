@@ -1,0 +1,7 @@
+__pycache__
+
+datasets/*
+downloads/*
+dois/*
+
+*.jpg

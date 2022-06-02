@@ -1,7 +1,7 @@
-from concurrent.futures import thread
 import os
 import json
 import time
+import random
 import requests
 import threading
 
@@ -12,23 +12,42 @@ class DownloadHandler:
         self.handler_thread = None
         self.active = False
         
+        self._downloads_processing = set()
+        
     def enqueue(self, fn, *args, **kwargs):
-        self.queue.append((fn, args, kwargs))
+        processing_key = self._get_processing_key()
+        
+        self._downloads_processing.add(processing_key)
+        
+        self.queue.append((processing_key, fn, args, kwargs))
+        
+        return processing_key
         
     def start(self):
         self.handler_thread = threading.Thread(target=self._handle_downloads, daemon=True)
-        self.handler_thread.start()
+        self.handler_thread.start()        
+        
+    def _get_processing_key(self):
+        key = None
+        
+        while key is None or key in self._downloads_processing:
+            key = random.randint(0, 2 ** 64)
+            
+        return key
     
     def _handle_downloads(self):
         while True:
             if len(self.queue) > 0:
                 self.active = True
                 
-                fn, args, kwargs = self.queue.pop(0)
+                processing_key, fn, args, kwargs = self.queue.pop(0)
                 
                 print("Download Handler now processing:", fn, args, kwargs)
                 
-                fn(*args, **kwargs)
+                try:
+                    fn(*args, **kwargs)
+                finally:        
+                    self._downloads_processing.discard(processing_key)
             else:
                 self.active = False
                 
@@ -38,19 +57,54 @@ class DownloadHandler:
         time.sleep(1.5)
         
         while self.active:
+            time.sleep(1)    
+        
+    def wait_for_download(self, processing_key):
+        print("Waiting for download for key", processing_key)
+        while processing_key in self._downloads_processing:
             time.sleep(1)
+        print("Finished waiting.")
             
 
 class GBIFRequestHandler:
-    def __init__(self, species_name, api_url="https://api.gbif.org/v1") -> None:
+    def __init__(self, species_name, basis_of_record="HUMAN_OBSERVATION", api_url="https://api.gbif.org/v1") -> None:
         self.species_name = species_name
         self.api_url = api_url
+        self.basis_of_record = basis_of_record
         
         self.download_url = None
         self.wait_for_availability = False
         
+        self.key = None
+            
+    def get_actual_species_name(self, species_name=None):
+        if species_name is None:
+            species_name = self.species_name
+                      
+        response = requests.get(
+            self.api_url + "/species/match",
+            params={"name": species_name}
+        )
+        
+        response = json.loads(response.content)
+        
+        return response["scientificName"]
+    
+    def get_doi(self, key=None):
+        if key is None:
+            key = self.key
+        
+        response = json.loads(requests.get(
+            self.api_url + "/occurrence/download/" + key,
+        ).content)
+        
+        return response["doi"]
+        
     def generate_download_link(self, username, password, email):
-        print("Generating download link for", self.species_name)
+        print("Searching species name for", self.species_name)
+        actual_species_name = self.get_actual_species_name(self.species_name)
+        print("Found name", actual_species_name)
+        
         predicate = {
             "creator": username,
             "notificationAddresses": [
@@ -63,18 +117,20 @@ class GBIFRequestHandler:
                 "predicates": [{
                     "type": "equals",
                     "key": "BASIS_OF_RECORD",
-                    "value": "HUMAN_OBSERVATION"
+                    "value": self.basis_of_record.upper(),
                 },{
                     "type": "equals",
                     "key": "MEDIA_TYPE",
                     "value": "StillImage"
                 },{
-                    "type": "like",
+                    "type": "equals",
                     "key": "SCIENTIFIC_NAME",
-                    "value": self.species_name + "*"
+                    "value": actual_species_name,
                 }]
             }
         }
+        
+        print("Generating download link for", self.species_name)
         
         response = requests.post(
             self.api_url + "/occurrence/download/request", 
@@ -94,10 +150,14 @@ class GBIFRequestHandler:
         
         print("Request finished, Status code:", response.status_code, ", Key: ", key)
         
+        self.key = key
+        
         return response.status_code in (200, 201)
         
     def queue_download(self, *args, **kwargs):
-        GLOBAL_DOWNLOAD_HANDLER.enqueue(self._download, *args, **kwargs)        
+        processing_key = GLOBAL_DOWNLOAD_HANDLER.enqueue(self._download, *args, **kwargs)
+        
+        return processing_key
 
     def _download(self, *, download_url=None, overwrite_original_name=False, wait_for_availability=None):
         if download_url is not None:
@@ -139,6 +199,9 @@ class GBIFRequestHandler:
             f.write(download.content)
         
         print("Finished downloading", self.download_url, "and wrote to file", os.path.join("downloads/", fname))
+        
+    def wait_for_download(self, processing_key):
+        GLOBAL_DOWNLOAD_HANDLER.wait_for_download(processing_key)
             
 
 GLOBAL_DOWNLOAD_HANDLER = DownloadHandler()
