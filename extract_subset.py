@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser(description="This tool generates a subselection
 
 parser.add_argument("folder", type=str, help="The folder for which to subselect the multimedia.")
 parser.add_argument("count", type=int, help="The number of items to select.")
+parser.add_argument("--noshuffle", action="store_true", help="Flag; if set, will select items in the order they were found instead of randomly selecting items.")
 
 args = parser.parse_args()
 
@@ -23,7 +24,8 @@ lines = lines[1:]
 # Keep only lines that have an image file located at the fourth position
 lines = [line for line in lines if line.split("\t")[3]]
 
-random.shuffle(lines)
+if not args.noshuffle:
+    random.shuffle(lines)
 
 # Subselect
 lines = lines[:args.count]

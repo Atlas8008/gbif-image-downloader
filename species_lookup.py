@@ -2,7 +2,7 @@ import json
 import argparse
 import requests
 
-parser = argparse.ArgumentParser(description="Sets up downloads for species and download the observation data from the GBIF platform.")
+parser = argparse.ArgumentParser(description="Looks up a list of species names in the GBIF database to check what actual name or synonym would be found when searching for a specific term or name.")
 
 parser.add_argument("list_file", type=str, help="The file containing the list of species to look up.")
 

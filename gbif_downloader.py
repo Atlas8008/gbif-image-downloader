@@ -23,7 +23,7 @@ with open(args.list_file) as f:
 species_names = [species_name.strip() for species_name in lines if species_name.strip()]
 
 handlers = []
-    
+
 for species_name in species_names:
     handler = GBIFRequestHandler(species_name, basis_of_record=args.basis_of_record)
     handlers.append(handler)
@@ -36,11 +36,9 @@ for species_name in species_names:
 
     if ok:
         processing_key = handler.queue_download(overwrite_original_name=True)
-        handler.wait_for_download(processing_key)        
+        handler.wait_for_download(processing_key)
     else:
         print("Something went wrong for", species_name)
-
-#handler.queue_download(download_url="http://api.gbif.org/v1/occurrence/download/request/0062582-200221144449610.zip")
 
 print("Waiting for inactivity...")
 
@@ -59,25 +57,25 @@ if args.doi:
     doi_fname = os.path.splitext(
         os.path.split(args.list_file)[1]
     )[0] + "_doi.txt"
-    
+
     with open("dois/" + doi_fname, "w") as f:
         f.write("\n".join(dois))
-    
+
 
 if args.extract:
     print("Starting extraction...")
     for species_name in species_names:
         zipfilepath = "downloads/" + species_name + ".zip"
         target_path = "datasets/" + species_name
-        
+
         print("Extracting", zipfilepath, "to", target_path, "...")
-        
+
         extract(
             zipfilepath=zipfilepath,
             filepath=["multimedia.txt", "rights.txt"],
             target_folder=target_path,
         )
-        
+
         print("Done.")
-        
+
 print("All done.")
