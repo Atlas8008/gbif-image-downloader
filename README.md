@@ -1,6 +1,10 @@
+# Description
+
+This tools downloads images from GBIF observation data, e.g. for a selection of certain species, and bundles them into a single dataset that can be used for training machine learning algorithms.
+
 # Prerequisites
 
-This tools only requires a working installation of python 3 (and the packages described in requirements.txt) and an account from [GBIF](http://gbif.org).
+This tool only requires a working installation of python 3 (and the packages described in requirements.txt) and an account from [GBIF](http://gbif.org).
 
 # Install
 
