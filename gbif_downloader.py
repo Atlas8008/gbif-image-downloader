@@ -11,6 +11,7 @@ parser.add_argument("list_file", type=str, help="The file containing the list of
 parser.add_argument("--extract", action="store_true", help="Flag; if set, the relevant files will be extracted to 'datasets/<species_name>'.")
 parser.add_argument("--doi", action="store_true", help="Flag; if set, the DOIs of the downloads will be extracted and be written to doi/<list_file>_doi.txt.")
 parser.add_argument("--basis_of_record", type=str, choices=("HUMAN_OBSERVATION", "PRESERVED_SPECIMEN"), default="HUMAN_OBSERVATION", help="The GBIF basis of record for the occurrence data.")
+parser.add_argument("--filters", type=str, nargs="*", default=None, help="Additional filters marked by 'key=property', separated by space.")
 
 args = parser.parse_args()
 
@@ -25,7 +26,11 @@ species_names = [species_name.strip() for species_name in lines if species_name.
 handlers = []
 
 for species_name in species_names:
-    handler = GBIFRequestHandler(species_name, basis_of_record=args.basis_of_record)
+    handler = GBIFRequestHandler(
+        species_name,
+        basis_of_record=args.basis_of_record,
+        filters={a: b for a, b in map(lambda s: s.split("=", 1), args.filters)}
+    )
     handlers.append(handler)
 
     ok = handler.generate_download_link(
