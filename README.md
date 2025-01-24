@@ -28,7 +28,7 @@ The main script for downloading the dataset can be called in the following way (
         --pack \
         --basis_of_record {HUMAN_OBSERVATION|PRESERVED_SPECIMEN}
 
-This will download the entire dataset and put it into a new subfolder under './datasets/<DATASET_NAME>'. Be aware that the download of the complete dataset can take quite a while (estimate about 2 seconds per single image). If the `--pack` argument is active, the images will be put into a single folder with all their meta information and a scplit script, which can be used to split the dataset in a training and validation part, if required. For more information on how to use that script, call the `create_train_val_split.py` script with the `--help` argument.
+This will download the entire dataset and put it into a new subfolder under './datasets/<DATASET_NAME>'. Be aware that the download of the complete dataset can take quite a while (estimate about 2 seconds per single image). If the `--pack` argument is active, the images will be put into a single folder with all their meta information and a split script, which can be used to split the dataset in a training and validation part, if required. For more information on how to use that script, call the `create_train_val_split.py` script with the `--help` argument.
 
 ### Species Lookup
 
