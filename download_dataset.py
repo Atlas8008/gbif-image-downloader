@@ -9,15 +9,20 @@ parser.add_argument("dataset_file", type=str, help="The path to the file contain
 parser.add_argument("subset_size", type=str, help="The number of images to select and download.")
 parser.add_argument("--pack", action="store_true", help="Flag; if set, the downloaded folders will be put into a joint dataset folder with all metadata and necessary tools.")
 parser.add_argument("--basis_of_record", type=str, choices=("HUMAN_OBSERVATION", "PRESERVED_SPECIMEN"), default="HUMAN_OBSERVATION", help="The GBIF basis of record for the occurrence data.")
-parser.add_argument("--filters", type=str, nargs="*", default=None, help="Additional filters marked by 'key=property', separated by space.")
+parser.add_argument("--filters", type=str, nargs="*", default="", help="Additional filters marked by 'key=property', separated by space.")
 
 args = parser.parse_args()
 
 print("Setting up and downloading occurrence and metadata...")
 
+if args.filters:
+    filters = ["--filters", " ".join(args.filters)]
+else:
+    filters = []
+
 # Generate download links and download all the metadata
 if subprocess.call(
-        ["python", "gbif_downloader.py", args.dataset_file, "--extract", "--doi", "--basis_of_record", args.basis_of_record, "--filters", " ".join(args.filters)]
+        ["python", "gbif_downloader.py", args.dataset_file, "--extract", "--doi", "--basis_of_record", args.basis_of_record] + filters
     ):
     exit()
 

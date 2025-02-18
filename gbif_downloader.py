@@ -23,13 +23,21 @@ with open(args.list_file) as f:
 
 species_names = [species_name.strip() for species_name in lines if species_name.strip()]
 
+print("Filters:", args.filters)
+
+if args.filters:
+    filters = {a: b for a, b in map(lambda s: s.split("=", 1), args.filters)}
+else:
+    filters = None
+
+
 handlers = []
 
 for species_name in species_names:
     handler = GBIFRequestHandler(
         species_name,
         basis_of_record=args.basis_of_record,
-        filters={a: b for a, b in map(lambda s: s.split("=", 1), args.filters)}
+        filters=filters
     )
     handlers.append(handler)
 
