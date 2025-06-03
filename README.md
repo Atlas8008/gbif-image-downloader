@@ -14,7 +14,7 @@ This tool only requires a working installation of python 3 (and the packages des
 ## Prerequisites
 
 1. Before running the script, the API access data has to be set up. For this, copy the `auth_template.json` file to `auth.json` and replace the placeholders in the file with the actual account data, i.e., user name, password and e-mail.
-2. Generate a dataset file. To do this, take as example the file `dataset_lists/test_set.txt`. I.e., fill an empty file with lines containing species names or similar, which can be found on [GBIF](http://gbif.org). Each line corresponds to a single key (e.g., species) to be searched for in the database.
+2. Generate a dataset file. To do this, take as example the file `dataset_lists/example_ds.txt`. I.e., fill an empty file with lines containing species names or similar, which can be found on [GBIF](http://gbif.org). Each line corresponds to a single key (e.g., species) to be searched for in the database.
 3. That's it, you're good to go!
 
 ## Script Calls
