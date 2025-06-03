@@ -10,37 +10,48 @@ parser.add_argument("subset_size", type=str, help="The number of images to selec
 parser.add_argument("--pack", action="store_true", help="Flag; if set, the downloaded folders will be put into a joint dataset folder with all metadata and necessary tools.")
 parser.add_argument("--basis_of_record", type=str, choices=("HUMAN_OBSERVATION", "PRESERVED_SPECIMEN"), default="HUMAN_OBSERVATION", help="The GBIF basis of record for the occurrence data.")
 parser.add_argument("--filters", type=str, nargs="*", default="", help="Additional filters marked by 'key=property', separated by space.")
+parser.add_argument("--skip_download", action="store_true", help="Flag; if set, the actual download will be skipped and an existing occurrence package will be extracted.")
+parser.add_argument("--download_images_only", action="store_true", help="Flag; if set, only images in the already prepared final folder structure will be downloaded and everything before will be skipped.")
 
 args = parser.parse_args()
 
-print("Setting up and downloading occurrence and metadata...")
 
-if args.filters:
-    filters = ["--filters", " ".join(args.filters)]
-else:
-    filters = []
 
-# Generate download links and download all the metadata
-if subprocess.call(
-        ["python", "gbif_downloader.py", args.dataset_file, "--extract", "--doi", "--basis_of_record", args.basis_of_record] + filters
-    ):
-    exit()
-
-# Find new subfolders
+# Parse dataset list file
 with open(args.dataset_file, "r") as f:
     item_names = f.read().strip().split("\n")
 
 # Remove stuff like empty lines
 item_names = [item for item in item_names if item]
 
-print("Generating subsets...")
 
-for folder_name in item_names:
-    # Extract the subsets
+if not args.download_images_only:
+    print("Setting up and downloading occurrence and metadata...")
+
+    if args.filters:
+        filters = ["--filters", " ".join(args.filters)]
+    else:
+        filters = []
+
+    additional_params = []
+
+    if args.skip_download:
+        additional_params.append("--skip_download")
+
+    # Generate download links and download all the metadata
     if subprocess.call(
-            ["python", "extract_subset.py", os.path.join('datasets/', folder_name), args.subset_size]
+            ["python", "gbif_downloader.py", args.dataset_file, "--extract", "--doi", "--basis_of_record", args.basis_of_record] + filters + additional_params
         ):
         exit()
+
+    print("Generating subsets...")
+
+    for folder_name in item_names:
+        # Extract the subsets
+        if subprocess.call(
+                ["python", "extract_subset.py", os.path.join('datasets/', folder_name), args.subset_size]
+            ):
+            exit()
 
 print("Downloading images...")
 

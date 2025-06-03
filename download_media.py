@@ -53,15 +53,21 @@ for i, line in enumerate(lines):
 
     while True:
         try:
-            response = requests.get(url, allow_redirects=True, timeout=10, headers=headers)
+            try:
+                response = requests.get(url, allow_redirects=True, timeout=60, headers=headers)
+            except requests.exceptions.ConnectTimeout as e:
+                response = None
 
-            response_status_code = response.status_code
-
-            if response_status_code == 200:
-                #f.write(response.content)
-                save_data_as_image(response.content, fname)
-
-                break
+            if response:
+                response_status_code = response.status_code
+    
+                if response_status_code == 200:
+                    #f.write(response.content)
+                    save_data_as_image(response.content, fname)
+    
+                    break
+            else:
+                response_status_code = "((TIMEOUT))"
 
             retry_count += 1
 

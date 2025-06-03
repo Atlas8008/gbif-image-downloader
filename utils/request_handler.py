@@ -5,6 +5,8 @@ import random
 import requests
 import threading
 
+from utils.utils import search_match
+
 
 class DownloadHandler:
     def __init__(self) -> None:
@@ -69,6 +71,7 @@ class DownloadHandler:
 class GBIFRequestHandler:
     def __init__(self, species_name, basis_of_record="HUMAN_OBSERVATION", filters=None, api_url="https://api.gbif.org/v1") -> None:
         self.species_name = species_name
+        self.actual_species_names = None
         self.api_url = api_url
         self.basis_of_record = basis_of_record
 
@@ -88,12 +91,14 @@ class GBIFRequestHandler:
 
         response = requests.get(
             self.api_url + "/species/match",
-            params={"name": species_name}
+            params={"name": species_name, "verbose": True}
         )
 
         response = json.loads(response.content)
 
-        return response["scientificName"]
+        name = search_match(response)
+
+        return name
 
     def get_doi(self, key=None):
         if key is None:
@@ -106,9 +111,31 @@ class GBIFRequestHandler:
         return response["doi"]
 
     def generate_download_link(self, username, password, email):
-        print("Searching species name for", self.species_name)
-        actual_species_name = self.get_actual_species_name(self.species_name)
-        print("Found name", actual_species_name)
+        if not isinstance(self.species_name, list):
+            species_names = [self.species_name]
+            single_name = True
+        else:
+            species_names = self.species_name
+            single_name = False
+
+        actual_species_names = []
+        orig_to_actual_dict = {}
+
+        for species_name in species_names:
+            print("Searching species name for", species_name)
+            actual_species_name = self.get_actual_species_name(species_name)
+
+            if actual_species_name == "":
+                print("Did not find name for", species_name, ", Skipping...")
+                if single_name: # Species not found
+                    return False
+            else:
+                print("Found name", actual_species_name)
+
+                actual_species_names.append(actual_species_name)
+                orig_to_actual_dict[species_name] = actual_species_name
+
+        self.actual_species_names = orig_to_actual_dict
 
         additional_filters = [
             {
@@ -136,14 +163,17 @@ class GBIFRequestHandler:
                     "key": "MEDIA_TYPE",
                     "value": "StillImage"
                 },{
-                    "type": "equals",
-                    "key": "SCIENTIFIC_NAME",
-                    "value": actual_species_name,
+                    "type": "or",
+                    "predicates": [{
+                        "type": "equals",
+                        "key": "SCIENTIFIC_NAME",
+                        "value": actual_species_name,
+                    } for actual_species_name in actual_species_names]
                 }] + additional_filters
             }
         }
 
-        print("Generating download link for", self.species_name)
+        print("Generating download link for", ", ".join(species_names))
 
         response = requests.post(
             self.api_url + "/occurrence/download/request",
@@ -172,7 +202,7 @@ class GBIFRequestHandler:
 
         return processing_key
 
-    def _download(self, *, download_url=None, overwrite_original_name=False, wait_for_availability=None):
+    def _download(self, *, download_url=None, overwrite_original_name=False, wait_for_availability=None, download_name=None):
         if download_url is not None:
             self.download_url = download_url
 
@@ -180,10 +210,13 @@ class GBIFRequestHandler:
 
         fname = os.path.split(self.download_url)[1]
 
-        if overwrite_original_name:
-            fname = self.species_name + os.path.splitext(fname)[1]
+        if download_name is not None:
+            fname = download_name + os.path.splitext(fname)[1]
         else:
-            fname = self.species_name + "_" + fname
+            if overwrite_original_name:
+                fname = self.species_name + os.path.splitext(fname)[1]
+            else:
+                fname = self.species_name + "_" + fname
 
         if wait_for_availability is None:
             wait_for_availability = self.wait_for_availability
