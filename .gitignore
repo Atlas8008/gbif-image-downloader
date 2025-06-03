@@ -1,7 +1,13 @@
 __pycache__
 
+auth.json
+.vscode
+
+datasets
+downloads
 datasets/*
 downloads/*
 dois/*
 
+*.txt
 *.jpg
