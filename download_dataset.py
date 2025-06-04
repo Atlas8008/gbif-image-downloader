@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description="Sets up GBIF downloads for a provi
 
 parser.add_argument("dataset_file", type=str, help="The path to the file containing the species (one item per line).")
 parser.add_argument("subset_size", type=str, help="The number of images to select and download.")
-parser.add_argument("--pack", action="store_true", help="Flag; if set, the downloaded folders will be put into a joint dataset folder with all metadata and necessary tools.")
+parser.add_argument("--no_pack", action="store_true", help="Flag; if set, the downloaded folders will not be put into a joint dataset folder with all metadata and necessary tools.")
 parser.add_argument("--basis_of_record", type=str, choices=("HUMAN_OBSERVATION", "PRESERVED_SPECIMEN"), default="HUMAN_OBSERVATION", help="The GBIF basis of record for the occurrence data.")
 parser.add_argument("--filters", type=str, nargs="*", default="", help="Additional filters marked by 'key=property', separated by space.")
 parser.add_argument("--skip_download", action="store_true", help="Flag; if set, the actual download will be skipped and an existing occurrence package will be extracted.")
@@ -69,7 +69,7 @@ for folder_name in item_names:
         ):
         exit()
 
-if args.pack:
+if not args.no_pack:
     import shutil
 
     print("Packing everyting together...")
