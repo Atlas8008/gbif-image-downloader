@@ -104,11 +104,22 @@ class GBIFRequestHandler:
         if key is None:
             key = self.key
 
-        response = json.loads(requests.get(
-            self.api_url + "/occurrence/download/" + key,
-        ).content)
+        print("Getting doi from", self.api_url + "/occurrence/download/" + key)
 
-        return response["doi"]
+        doi = None
+
+        while doi is None:
+            try:
+                response = json.loads(requests.get(
+                    self.api_url + "/occurrence/download/" + key,
+                ).content)
+
+                doi = response["doi"]
+            except KeyError:
+                print("DOI still missing, trying again in 10 seconds")
+                time.sleep(10)
+
+        return doi
 
     def generate_download_link(self, username, password, email):
         if not isinstance(self.species_name, list):
@@ -240,6 +251,8 @@ class GBIFRequestHandler:
             print("Received status code", download.status_code, "for download from", self.download_url)
 
         print("Downloading", self.download_url)
+
+        os.makedirs("downloads/", exist_ok=True)
 
         with open(os.path.join("downloads/", fname), "wb") as f:
             f.write(download.content)
