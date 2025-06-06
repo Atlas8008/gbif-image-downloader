@@ -72,7 +72,7 @@ for folder_name in item_names:
 if not args.no_pack:
     import shutil
 
-    print("Packing everyting together...")
+    print("Packing everything together...")
 
     dataset_name = os.path.splitext(os.path.split(args.dataset_file)[1])[0]
 
