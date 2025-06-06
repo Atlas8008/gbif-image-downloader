@@ -7,7 +7,9 @@ This tools downloads images from GBIF observation data, e.g. for a selection of 
 ## Installation
 This tool only requires a working installation of python 3 (and the packages described in requirements.txt) and an account from [GBIF](http://gbif.org).
 
-    pip install -r requirements.txt
+```
+pip install -r requirements.txt
+```
 
 ## Setup
 
