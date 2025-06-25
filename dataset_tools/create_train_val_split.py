@@ -6,15 +6,15 @@ import argparse
 
 parser = argparse.ArgumentParser(description=
                                     "This script split the images in the " +
-                                    "dataset subfolders into training and" + 
-                                    "validation sets and saves them to a " + 
+                                    "dataset subfolders into training and" +
+                                    "validation sets and saves them to a " +
                                     "json file.")
 
 parser.add_argument("train_size", type=int, help=
-                                    "The number of images of each class " + 
+                                    "The number of images of each class " +
                                     "in the training set.")
 parser.add_argument("--val_size", type=int, default=None, help=
-                                    "The number of images of each class " + 
+                                    "The number of images of each class " +
                                     "in the validation set. If not set, " +
                                     "all images not contained in the " +
                                     "training set will be used.")
@@ -45,7 +45,7 @@ for folder in folders:
         val_image_files = image_files[args.train_size:]
     else:
         val_image_files = image_files[args.train_size:args.train_size + args.val_size]
-    
+
     data_dict["train"][os.path.basename(folder)] = train_image_files
     data_dict["val"][os.path.basename(folder)] = val_image_files
 
@@ -55,4 +55,8 @@ for folder in folders:
 # Save everything
 with open(target_filename, "w") as f:
     f.write(json.dumps(data_dict))
+
+# Save folder names as class names
+with open("class_names.txt", "w") as f:
+    f.write("\n".join(folders))
 
