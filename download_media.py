@@ -1,9 +1,16 @@
 import os
+import io
 import time
 import requests
 import argparse
 
-from utils.image_convert import save_data_as_image
+from PIL import Image
+
+
+def save_data_as_image(data, fname):
+    img = Image.open(io.BytesIO(data))
+
+    img.save(fname)
 
 
 parser = argparse.ArgumentParser(description="This tool generates a subselection of items from a multimedia.txt provided a folder.")
@@ -60,11 +67,11 @@ for i, line in enumerate(lines):
 
             if response:
                 response_status_code = response.status_code
-    
+
                 if response_status_code == 200:
                     #f.write(response.content)
                     save_data_as_image(response.content, fname)
-    
+
                     break
             else:
                 response_status_code = "((TIMEOUT))"
